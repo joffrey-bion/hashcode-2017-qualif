@@ -1,0 +1,46 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'application'
+
+group = 'org.chocolateam.hashcode'
+version = '1.0.0'
+
+sourceCompatibility = 1.8
+
+repositories {
+    maven {
+        url  "http://dl.bintray.com/lwouis/maven"
+    }
+    jcenter()
+}
+
+dependencies {
+    compile 'com.lwouis.hashcode:hashcode_helper:1.0'
+    compile 'org.hildan.hashcode:hashcode-input-parser:2.0.0'
+}
+
+mainClassName = 'org.chocolateam.hashcode.Main'
+
+task srcZip(type: Zip, dependsOn: tasks.build) {
+    classifier = 'src'
+    from sourceSets*.allSource
+    destinationDir file("$rootDir/outputs/")}
+
+task generateOutputs ( type: JavaExec, dependsOn: tasks.build ) {
+    args("inputs/*")
+    description = "Hashcode output generation"
+    main = project.mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task startWebdriverManager(type: Exec) {
+    commandLine 'webdriver-manager.cmd', 'start'
+}
+
+task runProtractor(type: Exec) {
+    commandLine 'protractor.cmd', "$rootDir/deploy/conf.js"
+}
+
+task submit(dependsOn: [tasks.srcZip, tasks.generateOutputs]) {}
+tasks.generateOutputs.mustRunAfter(tasks.srcZip)
+tasks.runProtractor.mustRunAfter(tasks.generateOutputs)
