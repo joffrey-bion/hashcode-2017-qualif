@@ -27,12 +27,18 @@ public class StreamingProblem {
 
     public RequestDesc[] requestDescs;
 
-    public Cache[] caches;
-    public Video[] videos;
+    private Cache[] caches;
+
+    private Video[] videos;
+
+    private long totalUsedCacheCapacity;
+
+    private long totalCacheCapacity;
 
     public Solution solve() {
         System.out.println(String.format("Solving for %d videos, %d caches, %d endpoints", nVideos, nCaches,
                 nEndpoints));
+
         createCaches();
         createVideos();
         computeInitialGains();
@@ -49,6 +55,8 @@ public class StreamingProblem {
         for (int i = 0; i < nCaches; i++) {
             caches[i] = new Cache(i, cacheSize);
         }
+        totalCacheCapacity = cacheSize * nCaches;
+        totalUsedCacheCapacity = 0;
     }
 
     private void createVideos() {
@@ -102,7 +110,7 @@ public class StreamingProblem {
         if (maxCache.canHold(maxRankVideo)) {
             cacheVideo(maxCache, maxRankVideo);
             System.out.println(String.format(
-                    "Inserted video %s in cache %3d (%5.1f%% full, %3d videos)  %6.2f%% total cache capacity",
+                    "Inserted video %s in cache %3d (%5.1f%% full, %3d videos)  %5.1f%% total cache capacity",
                     maxRankVideo, maxCache.id, maxCache.getCurrentCacheUsage(cacheSize), maxCache.getNbVideosInCache(),
                     getOverallCacheUsage()));
             if (maxCache.scoredVideos.isEmpty()) {
@@ -113,12 +121,7 @@ public class StreamingProblem {
     }
 
     private double getOverallCacheUsage() {
-        long totalRemainingCapacity = 0;
-        for (Cache cache : caches) {
-            totalRemainingCapacity += cache.remainingCapacity;
-        }
-        long totalCacheCapacity = cacheSize * caches.length;
-        return (double)(totalCacheCapacity - totalRemainingCapacity) / totalCacheCapacity;
+        return (double)totalUsedCacheCapacity * 100 / totalCacheCapacity;
     }
 
     @Nullable
@@ -140,6 +143,7 @@ public class StreamingProblem {
 
     private void cacheVideo(Cache maxCache, ScoredVideo maxRankVideo) {
         maxCache.store(maxRankVideo.video);
+        totalUsedCacheCapacity += maxRankVideo.video.size;
         reduceScoreInOtherCaches(maxCache, maxRankVideo);
     }
 
@@ -152,8 +156,7 @@ public class StreamingProblem {
             }
             long overestimationInGain = alreadyGained * nRequestsForVid;
             double overestimationInRank = overestimationInGain / video.video.size;
-            for (Entry<Integer, Integer> entry : endpoint.gainPerCache.entrySet()) {
-                int epCacheId = entry.getKey();
+            for (Integer epCacheId : endpoint.gainPerCache.keySet()) {
                 if (destinationCache.id != epCacheId) {
                     removeOverestimatedGain(video, overestimationInRank, caches[epCacheId]);
                 }
@@ -165,8 +168,10 @@ public class StreamingProblem {
         Queue<ScoredVideo> queue = cache.scoredVideos;
         ScoredVideo videoInThisCache = queue.removeSimilar(video);
         if (videoInThisCache == null) {
-            System.out.println(String.format("Video %d already stored in cache %d, not in queue anymore", video.video
-                    .id, cache.id));
+            // FIXME check why this case is possible
+            //            System.out.println(String.format("Video %d already stored in cache %d, not in queue
+            // anymore", video.video
+            //                    .id, cache.id));
             return;
         }
         System.out.println(
