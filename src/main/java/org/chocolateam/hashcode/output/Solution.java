@@ -1,33 +1,30 @@
 package org.chocolateam.hashcode.output;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import org.chocolateam.hashcode.input.Video;
+import org.chocolateam.hashcode.model.Cache;
 
 public class Solution {
 
-    private final Map<Integer, List<Video>> videosPerCache;
+    private final Cache[] caches;
 
-    public Solution(Map<Integer, List<Video>> videosPerCache) {
-        this.videosPerCache = videosPerCache;
+    public Solution(Cache[] caches) {
+        this.caches = caches;
     }
 
     public List<String> outputLines() {
         System.out.println("Printing solution...");
-        List<String> lines = new ArrayList<>(videosPerCache.size() + 1);
-        lines.add(String.valueOf(videosPerCache.size()));
-        for (Entry<Integer, List<Video>> rankedVideoForCache : videosPerCache.entrySet()) {
-            lines.add(createCacheLine(rankedVideoForCache.getKey(), rankedVideoForCache.getValue()));
-        }
+        List<String> lines = new ArrayList<>(caches.length + 1);
+        lines.add(String.valueOf(caches.length));
+        Arrays.stream(caches).map(Solution::createCacheLine).forEach(lines::add);
         return lines;
     }
 
-    private String createCacheLine(Integer cache, List<Video> videos) {
-        return String.valueOf(cache) + " " + videos.stream()
+    private static String createCacheLine(Cache cache) {
+        return String.valueOf(cache.id) + " " + cache.storedVideos.stream()
                 .map(v -> v.id)
                 .map(String::valueOf)
                 .collect(Collectors.joining(" "));

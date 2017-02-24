@@ -1,4 +1,4 @@
-package org.chocolateam.hashcode.input;
+package org.chocolateam.hashcode.model;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,11 +34,11 @@ public class Video implements Comparable<Video> {
 
     @Override
     public int compareTo(@NotNull Video o) {
-        return (int)Math.signum(rank - o.rank);
+        return (int)(rank - o.rank);
     }
 
     @Override
     public String toString() {
-        return id + " (r=" + rank + ")";
+        return String.format("%4d (r=%6.2f)", id, rank);
     }
 }

@@ -4,9 +4,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Endpoint {
+import org.chocolateam.hashcode.model.Video;
 
-    public int id;
+public class Endpoint {
 
     public int dcLatency;
 
@@ -23,4 +23,8 @@ public class Endpoint {
         Arrays.stream(latencies).forEach(l -> gainPerCache.put(l.cacheIndex, dcLatency - l.latency));
     }
 
+    public void addRequests(int videoId, int nbRequests) {
+        nRequestsPerVideo.putIfAbsent(videoId, 0L);
+        nRequestsPerVideo.compute(videoId, (c, val) -> val + nbRequests);
+    }
 }
