@@ -21,7 +21,6 @@ public class ScoredVideo {
         }
 
         ScoredVideo that = (ScoredVideo)o;
-
         return video.equals(that.video);
     }
 
@@ -32,6 +31,6 @@ public class ScoredVideo {
 
     @Override
     public String toString() {
-        return String.format("%4d (r=%10.2f)", video.id, score);
+        return String.format("%4d (s=%11.2f)", video.id, score);
     }
 }

@@ -12,6 +12,8 @@ public class Endpoint {
 
     public int nCaches;
 
+    public int cacheIds[];
+
     public Map<Integer, Integer> cacheLatencies = new HashMap<>();
 
     public Map<Integer, Integer> gainPerCache = new HashMap<>();
@@ -19,6 +21,7 @@ public class Endpoint {
     public Map<Video, Long> nRequestsPerVideo = new HashMap<>();
 
     public void setLatencies(Latency[] latencies) {
+        cacheIds = Arrays.stream(latencies).mapToInt(l -> l.cacheIndex).toArray();
         Arrays.stream(latencies).forEach(l -> cacheLatencies.put(l.cacheIndex, l.latency));
         Arrays.stream(latencies).forEach(l -> gainPerCache.put(l.cacheIndex, dcLatency - l.latency));
     }

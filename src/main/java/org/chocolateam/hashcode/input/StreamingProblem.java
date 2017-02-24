@@ -144,10 +144,10 @@ public class StreamingProblem {
     private void cacheVideo(Cache maxCache, ScoredVideo maxRankVideo) {
         maxCache.store(maxRankVideo.video);
         totalUsedCacheCapacity += maxRankVideo.video.size;
-        reduceScoreInOtherCaches(maxCache, maxRankVideo);
+        reduceScoreInSiblingCaches(maxCache, maxRankVideo);
     }
 
-    private void reduceScoreInOtherCaches(Cache destinationCache, ScoredVideo video) {
+    private void reduceScoreInSiblingCaches(Cache destinationCache, ScoredVideo video) {
         for (Endpoint endpoint : destinationCache.endpoints) {
             int alreadyGained = endpoint.gainPerCache.get(destinationCache.id);
             long nRequestsForVid = endpoint.getNbRequests(video.video);
@@ -156,15 +156,19 @@ public class StreamingProblem {
             }
             long overestimationInGain = alreadyGained * nRequestsForVid;
             double overestimationInRank = overestimationInGain / video.video.size;
-            for (Integer epCacheId : endpoint.gainPerCache.keySet()) {
-                if (destinationCache.id != epCacheId) {
-                    removeOverestimatedGain(video, overestimationInRank, caches[epCacheId]);
-                }
+            reduceVideoScores(video, overestimationInRank, endpoint.cacheIds, destinationCache);
+        }
+    }
+
+    private void reduceVideoScores(ScoredVideo video, double overestimationInRank, int[] cacheIds, Cache except) {
+        for (int cacheId : cacheIds) {
+            if (cacheId != except.id) {
+                reduceVideoScore(video, overestimationInRank, caches[cacheId]);
             }
         }
     }
 
-    private void removeOverestimatedGain(ScoredVideo video, double overestimationInRank, Cache cache) {
+    private void reduceVideoScore(ScoredVideo video, double amount, Cache cache) {
         Queue<ScoredVideo> queue = cache.scoredVideos;
         ScoredVideo videoInThisCache = queue.removeSimilar(video);
         if (videoInThisCache == null) {
@@ -175,8 +179,8 @@ public class StreamingProblem {
             return;
         }
         System.out.println(
-                String.format("Removing %5.2f score for video %s for cache %d", overestimationInRank, video, cache.id));
-        videoInThisCache.score -= overestimationInRank;
+                String.format("Removing %7.2f score for video %s for cache %d", amount, video, cache.id));
+        videoInThisCache.score -= amount;
         if (videoInThisCache.score < 0) {
             videoInThisCache.score = 0;
         }
