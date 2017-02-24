@@ -24,7 +24,7 @@ public class Solution {
     }
 
     private static String createCacheLine(Cache cache) {
-        return String.valueOf(cache.id) + " " + cache.storedVideos.stream()
+        return String.valueOf(cache.id) + " " + cache.getStoredVideos().stream()
                 .map(v -> v.id)
                 .map(String::valueOf)
                 .collect(Collectors.joining(" "));

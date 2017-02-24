@@ -1,6 +1,7 @@
 package org.chocolateam.hashcode.model;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -8,10 +9,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.chocolateam.hashcode.Queue;
 import org.chocolateam.hashcode.input.Endpoint;
+import org.chocolateam.hashcode.util.Queue;
 
 public class Cache {
+
+    private static final Comparator<ScoredVideo> comp = Comparator.comparingDouble(v -> v.score);
 
     public final int id;
 
@@ -19,11 +22,11 @@ public class Cache {
 
     public Set<Endpoint> endpoints = new HashSet<>();
 
-    public Map<Integer, Long> gainPerVideo = new HashMap<>();
+    private Map<Video, Long> gainPerVideo = new HashMap<>();
 
-    public List<Video> storedVideos = new ArrayList<>();
+    private List<Video> storedVideos = new ArrayList<>();
 
-    public Queue<Video> rankedVideos = new Queue<>();
+    public Queue<ScoredVideo> scoredVideos = new Queue<>(comp.reversed());
 
     public Cache(int id, int initialCapacity) {
         this.id = id;
@@ -38,14 +41,31 @@ public class Cache {
         return storedVideos.size();
     }
 
-    public void addRankedVideos(int[] videoSizes) {
-        for (Entry<Integer, Long> gainForVideo : gainPerVideo.entrySet()) {
-            int videoId = gainForVideo.getKey();
+    public void addGainForVideo(Video video, long savedMillis) {
+        gainPerVideo.putIfAbsent(video, 0L);
+        gainPerVideo.compute(video, (c, val) -> val + savedMillis);
+    }
+
+    public void scoreVideos() {
+        for (Entry<Video, Long> gainForVideo : gainPerVideo.entrySet()) {
+            Video video = gainForVideo.getKey();
             long totalGainForVideo = gainForVideo.getValue();
-            double rank = (double)totalGainForVideo / videoSizes[videoId];
-            rankedVideos.add(new Video(videoId, rank));
+            double rank = (double)totalGainForVideo / video.size;
+            scoredVideos.add(new ScoredVideo(video, rank));
         }
-        rankedVideos.sort();
+    }
+
+    public boolean canHold(ScoredVideo video) {
+        return video.video.size <= remainingCapacity;
+    }
+
+    public void store(Video video) {
+        storedVideos.add(video);
+        remainingCapacity -= video.size;
+    }
+
+    public List<Video> getStoredVideos() {
+        return storedVideos;
     }
 
     @Override

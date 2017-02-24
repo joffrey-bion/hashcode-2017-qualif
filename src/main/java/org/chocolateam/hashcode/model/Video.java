@@ -1,16 +1,14 @@
 package org.chocolateam.hashcode.model;
 
-import org.jetbrains.annotations.NotNull;
-
-public class Video implements Comparable<Video> {
+public class Video {
 
     public final int id;
 
-    public double rank;
+    public final int size;
 
-    public Video(int id, double rank) {
+    public Video(int id, int size) {
         this.id = id;
-        this.rank = rank;
+        this.size = size;
     }
 
     @Override
@@ -33,12 +31,7 @@ public class Video implements Comparable<Video> {
     }
 
     @Override
-    public int compareTo(@NotNull Video o) {
-        return (int)(rank - o.rank);
-    }
-
-    @Override
     public String toString() {
-        return String.format("%4d (r=%6.2f)", id, rank);
+        return "Video{" + "id=" + id + '}';
     }
 }
