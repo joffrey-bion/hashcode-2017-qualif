@@ -43,7 +43,7 @@ public class Cache {
 
     public void addGainForVideo(Video video, long savedMillis) {
         gainPerVideo.putIfAbsent(video, 0L);
-        gainPerVideo.compute(video, (c, val) -> val + savedMillis);
+        gainPerVideo.merge(video, savedMillis, (old, add) -> old + add);
     }
 
     public void scoreVideos() {
