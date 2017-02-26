@@ -6,7 +6,6 @@ import org.chocolateam.hashcode.model.Cache;
 import org.chocolateam.hashcode.model.ScoredVideo;
 import org.chocolateam.hashcode.model.Video;
 import org.chocolateam.hashcode.output.Solution;
-import org.chocolateam.hashcode.util.Queue;
 import org.jetbrains.annotations.Nullable;
 
 public class StreamingProblem {
@@ -106,16 +105,21 @@ public class StreamingProblem {
             System.out.println("We're done.");
             return false;
         }
-        ScoredVideo maxRankVideo = maxCache.scoredVideos.poll();
+        ScoredVideo maxRankVideo = maxCache.pollBestCandidate();
         if (maxCache.canHold(maxRankVideo)) {
             cacheVideo(maxCache, maxRankVideo);
             System.out.println(String.format(
                     "Inserted video %s in cache %3d (%5.1f%% full, %3d videos)  %5.1f%% total cache capacity",
                     maxRankVideo, maxCache.id, maxCache.getCurrentCacheUsage(cacheSize), maxCache.getNbVideosInCache(),
                     getOverallCacheUsage()));
-            if (maxCache.scoredVideos.isEmpty()) {
+            if (maxCache.isQueueEmpty()) {
                 System.out.println("Queue for cache " + maxCache + " exhausted");
             }
+        } else if (maxCache.allCandidatesFit()) {
+            // we're gonna add them anyway at some point, better update the score of these videos in other caches up
+            // front
+            System.out.println("All remaining candidates videos for cache " + maxCache + " will fit, adding them all");
+            cacheAllCandidates(maxCache);
         }
         return true;
     }
@@ -132,7 +136,7 @@ public class StreamingProblem {
             if (cache.scoredVideos.isEmpty()) {
                 continue;
             }
-            ScoredVideo localMaxVideo = cache.scoredVideos.peek();
+            ScoredVideo localMaxVideo = cache.peekBestCandidate();
             if (cacheWithBestVideo == null || localMaxVideo.score > globalMaxScore) {
                 cacheWithBestVideo = cache;
                 globalMaxScore = localMaxVideo.score;
@@ -141,10 +145,16 @@ public class StreamingProblem {
         return cacheWithBestVideo;
     }
 
-    private void cacheVideo(Cache maxCache, ScoredVideo maxRankVideo) {
-        maxCache.store(maxRankVideo.video);
-        totalUsedCacheCapacity += maxRankVideo.video.size;
-        reduceScoreInSiblingCaches(maxCache, maxRankVideo);
+    private void cacheVideo(Cache cache, ScoredVideo scoredVideo) {
+        cache.store(scoredVideo.video);
+        totalUsedCacheCapacity += scoredVideo.video.size;
+        reduceScoreInSiblingCaches(cache, scoredVideo);
+    }
+
+    private void cacheAllCandidates(Cache cache) {
+        while (!cache.isQueueEmpty()) {
+            cacheVideo(cache, cache.pollBestCandidate());
+        }
     }
 
     private void reduceScoreInSiblingCaches(Cache destinationCache, ScoredVideo video) {
@@ -168,9 +178,8 @@ public class StreamingProblem {
         }
     }
 
-    private void reduceVideoScore(ScoredVideo video, double amount, Cache cache) {
-        Queue<ScoredVideo> queue = cache.scoredVideos;
-        ScoredVideo videoInThisCache = queue.removeSimilar(video);
+    private static void reduceVideoScore(ScoredVideo video, double amount, Cache cache) {
+        ScoredVideo videoInThisCache = cache.scoredVideos.removeSimilar(video);
         if (videoInThisCache == null) {
             // FIXME check why this case is possible
             //            System.out.println(String.format("Video %d already stored in cache %d, not in queue
@@ -184,6 +193,6 @@ public class StreamingProblem {
         if (videoInThisCache.score < 0) {
             videoInThisCache.score = 0;
         }
-        queue.add(videoInThisCache);
+        cache.scoredVideos.add(videoInThisCache);
     }
 }

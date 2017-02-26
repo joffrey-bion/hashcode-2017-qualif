@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.chocolateam.hashcode.input.Endpoint;
-import org.chocolateam.hashcode.util.Queue;
+import org.chocolateam.hashcode.util.PriorityQueue;
 
 public class Cache {
 
@@ -26,11 +26,15 @@ public class Cache {
 
     private List<Video> storedVideos = new ArrayList<>();
 
-    public Queue<ScoredVideo> scoredVideos = new Queue<>(comp.reversed());
+    public PriorityQueue<ScoredVideo> scoredVideos;
+
+    private int totalCandidateVideosSize;
 
     public Cache(int id, int initialCapacity) {
         this.id = id;
         this.remainingCapacity = initialCapacity;
+        this.scoredVideos = new PriorityQueue<>(comp.reversed());
+        this.totalCandidateVideosSize = 0;
     }
 
     public double getCurrentCacheUsage(int totalCapacity) {
@@ -52,7 +56,35 @@ public class Cache {
             long totalGainForVideo = gainForVideo.getValue();
             double rank = (double)totalGainForVideo / video.size;
             scoredVideos.add(new ScoredVideo(video, rank));
+            totalCandidateVideosSize += video.size;
         }
+        if (allCandidatesFit()) {
+            System.out.println("All remaining candidates videos for cache " + this + " will fit, adding them all");
+            storeAllCandidates();
+        }
+    }
+
+    public boolean allCandidatesFit() {
+        return totalCandidateVideosSize <= remainingCapacity;
+    }
+
+    private void storeAllCandidates() {
+        System.out.println("Storing all candidates for cache " + this);
+        while (!isQueueEmpty()) {
+            store(pollBestCandidate().video);
+        }
+    }
+
+    public ScoredVideo pollBestCandidate() {
+        return scoredVideos.poll();
+    }
+
+    public ScoredVideo peekBestCandidate() {
+        return scoredVideos.peek();
+    }
+
+    public boolean isQueueEmpty() {
+        return scoredVideos.isEmpty();
     }
 
     public boolean canHold(ScoredVideo video) {
