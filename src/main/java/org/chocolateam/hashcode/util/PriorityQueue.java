@@ -8,11 +8,11 @@ import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.SortedSet;
 import java.util.Spliterator;
 import java.util.function.Consumer;
-
-import java.util.Queue;
+import java.util.function.Predicate;
 
 /**
  * An unbounded priority {@linkplain Queue queue} based on a priority heap.
@@ -358,6 +358,15 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements java.io.Serial
         return -1;
     }
 
+    private int indexOf(Predicate<E> p) {
+        for (int i = 0; i < size; i++) {
+            if (p.test((E)queue[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     /**
      * Removes a single instance of the specified element from this queue,
      * if it is present.  More formally, removes an element {@code e} such
@@ -381,12 +390,14 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements java.io.Serial
         }
     }
 
-    public E removeSimilar(Object o) {
-        int i = indexOf(o);
+    public E removeMatching(Predicate<E> p) {
+        int i = indexOf(p);
         if (i == -1) {
             return null;
         } else {
-            return removeAt(i);
+            E removed = (E)queue[i];
+            removeAt(i);
+            return removed;
         }
     }
 

@@ -116,7 +116,7 @@ public class StreamingProblem {
         }
         ScoredVideo maxRankVideo = maxCache.pollBestCandidate();
         if (maxCache.canHold(maxRankVideo)) {
-            cacheVideo(maxCache, maxRankVideo);
+            cacheVideo(maxCache, maxRankVideo.video);
             System.out.println(String.format(
                     "Inserted video %s in cache %3d (%5.1f%% full, %3d videos)  %5.1f%% total cache capacity",
                     maxRankVideo, maxCache.id, maxCache.getCurrentCacheUsage(cacheSize), maxCache.getNbVideosInCache(),
@@ -154,50 +154,48 @@ public class StreamingProblem {
         return cacheWithBestVideo;
     }
 
-    private void cacheVideo(Cache cache, ScoredVideo scoredVideo) {
-        cache.store(scoredVideo.video);
-        totalUsedCacheCapacity += scoredVideo.video.size;
-        reduceScoreInSiblingCaches(cache, scoredVideo);
+    private void cacheVideo(Cache cache, Video video) {
+        cache.store(video);
+        totalUsedCacheCapacity += video.size;
+        reduceScoreInSiblingCaches(cache, video);
     }
 
     private void cacheAllCandidates(Cache cache) {
         while (!cache.isQueueEmpty()) {
-            cacheVideo(cache, cache.pollBestCandidate());
+            cacheVideo(cache, cache.pollBestCandidate().video);
         }
     }
 
-    private void reduceScoreInSiblingCaches(Cache destinationCache, ScoredVideo video) {
+    private void reduceScoreInSiblingCaches(Cache destinationCache, Video video) {
         for (Endpoint endpoint : destinationCache.endpoints) {
             int alreadyGained = endpoint.gainPerCache.get(destinationCache.id);
-            long nRequestsForVid = endpoint.getNbRequests(video.video);
+            long nRequestsForVid = endpoint.getNbRequests(video);
             if (nRequestsForVid == 0) {
                 continue; // no request for this video in this endpoint
             }
             long overestimationInGain = alreadyGained * nRequestsForVid;
-            double overestimationInRank = overestimationInGain / video.video.size;
-            reduceVideoScores(video, overestimationInRank, endpoint.cacheIds, destinationCache);
+            double overestimationInRank = overestimationInGain / video.size;
+            reduceVideoScores(video, overestimationInRank, endpoint.cacheIds, destinationCache.id);
         }
     }
 
-    private void reduceVideoScores(ScoredVideo video, double overestimationInRank, int[] cacheIds, Cache except) {
+    private void reduceVideoScores(Video video, double overestimationInRank, int[] cacheIds, int chosenCache) {
         for (int cacheId : cacheIds) {
-            if (cacheId != except.id) {
+            if (cacheId != chosenCache) {
                 reduceVideoScore(video, overestimationInRank, caches[cacheId]);
             }
         }
     }
 
-    private static void reduceVideoScore(ScoredVideo video, double amount, Cache cache) {
-        ScoredVideo videoInThisCache = cache.scoredVideos.removeSimilar(video);
+    private static void reduceVideoScore(Video video, double amount, Cache cache) {
+        ScoredVideo videoInThisCache = cache.scoredVideos.removeMatching(v -> v.video.id == video.id);
         if (videoInThisCache == null) {
-            // FIXME check why this case is possible
-            //            System.out.println(String.format("Video %d already stored in cache %d, not in queue
-            // anymore", video.video
-            //                    .id, cache.id));
+//            System.out.println(
+//                    String.format("Video %s already stored in cache %s, not in queue anymore", video, cache));
             return;
         }
-        System.out.println(
-                String.format("Removing %7.2f score for video %s for cache %d", amount, video, cache.id));
+//        System.out.println(
+//                String.format("Removing %7.2f score for video %s for cache %s", amount, video, cache));
         videoInThisCache.score -= amount;
         if (videoInThisCache.score < 0) {
             videoInThisCache.score = 0;
