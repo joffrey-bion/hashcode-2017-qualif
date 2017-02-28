@@ -58,21 +58,10 @@ public class Cache {
             scoredVideos.add(new ScoredVideo(video, rank));
             totalCandidateVideosSize += video.size;
         }
-        if (allCandidatesFit()) {
-            System.out.println("All remaining candidates videos for cache " + this + " will fit, adding them all");
-            storeAllCandidates();
-        }
     }
 
     public boolean allCandidatesFit() {
         return totalCandidateVideosSize <= remainingCapacity;
-    }
-
-    private void storeAllCandidates() {
-        System.out.println("Storing all candidates for cache " + this);
-        while (!isQueueEmpty()) {
-            store(pollBestCandidate().video);
-        }
     }
 
     public ScoredVideo pollBestCandidate() {

@@ -1,5 +1,6 @@
 package org.chocolateam.hashcode.input;
 
+import java.util.Arrays;
 import java.util.Map.Entry;
 
 import org.chocolateam.hashcode.model.Cache;
@@ -42,6 +43,8 @@ public class StreamingProblem {
         createVideos();
         computeInitialGains();
         scoreVideos();
+
+        Arrays.stream(caches).filter(Cache::allCandidatesFit).forEach(this::cacheAllCandidates);
 
         while (findAndInsertMax()) {
         }
