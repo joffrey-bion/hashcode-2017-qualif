@@ -24,9 +24,8 @@ public class Main {
                                                                     .arraySection(Endpoint::setLatencies, Latency[]::new, "nCaches", latencyReader);
 
         TreeObjectReader<StreamingProblem> rootReader = TreeObjectReader.of(StreamingProblem::new)
-                                                                        .fieldsAndVarsLine("nVideos@V", "nEndpoints@E", "nRequestDescriptions@R", "nCaches@C",
-                                                                                "cacheSize")
-                                                                        .intArrayLine((p, sizes) -> p.videoSizes = sizes)
+                                                                        .fieldsAndVarsLine("nVideos", "nEndpoints@E", "nRequestDescriptions@R", "nCaches", "cacheSize")
+                                                                        .intArrayLine((sp, arr) -> sp.videoSizes = arr)
                                                                         .arraySection((sp, arr) -> sp.endpoints = arr, Endpoint[]::new, "E", endpointReader)
                                                                         .arraySection((sp, arr) -> sp.requestDescs = arr, RequestDesc[]::new, "R", requestDescReader);
 

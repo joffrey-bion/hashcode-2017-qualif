@@ -390,7 +390,7 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements java.io.Serial
         }
     }
 
-    public E removeMatching(Predicate<E> p) {
+    public E removeFirstMatch(Predicate<E> p) {
         int i = indexOf(p);
         if (i == -1) {
             return null;

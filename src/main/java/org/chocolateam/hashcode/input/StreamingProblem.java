@@ -188,14 +188,10 @@ public class StreamingProblem {
     }
 
     private static void reduceVideoScore(Video video, double amount, Cache cache) {
-        ScoredVideo videoInThisCache = cache.scoredVideos.removeMatching(v -> v.video.id == video.id);
+        ScoredVideo videoInThisCache = cache.scoredVideos.removeFirstMatch(v -> v.video.id == video.id);
         if (videoInThisCache == null) {
-//            System.out.println(
-//                    String.format("Video %s already stored in cache %s, not in queue anymore", video, cache));
             return;
         }
-//        System.out.println(
-//                String.format("Removing %7.2f score for video %s for cache %s", amount, video, cache));
         videoInThisCache.score -= amount;
         if (videoInThisCache.score < 0) {
             videoInThisCache.score = 0;

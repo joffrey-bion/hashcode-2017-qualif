@@ -10,8 +10,6 @@ public class Endpoint {
 
     public int dcLatency;
 
-    public int nCaches;
-
     public int cacheIds[];
 
     public Map<Integer, Integer> cacheLatencies = new HashMap<>();
