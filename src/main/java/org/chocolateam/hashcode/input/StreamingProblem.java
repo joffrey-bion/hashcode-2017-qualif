@@ -1,6 +1,7 @@
 package org.chocolateam.hashcode.input;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.chocolateam.hashcode.model.Cache;
@@ -35,9 +36,10 @@ public class StreamingProblem {
 
     private long totalCacheCapacity;
 
-    public Solution solve() {
-        System.out.println(String.format("Solving for %d videos, %d caches, %d endpoints", nVideos, nCaches,
-                nEndpoints));
+    public List<String> solve() {
+        System.out.println(
+                String.format("Solving for %d videos, %d caches, %d endpoints, %d requests", nVideos, nCaches,
+                        nEndpoints, nRequestDescriptions));
 
         createCaches();
         createVideos();
@@ -49,7 +51,7 @@ public class StreamingProblem {
         while (findAndInsertMax()) {
         }
 
-        return new Solution(caches);
+        return new Solution(caches).outputLines();
     }
 
     private void createCaches() {
@@ -103,6 +105,10 @@ public class StreamingProblem {
     }
 
     private boolean findAndInsertMax() {
+        if (Thread.currentThread().isInterrupted()) {
+            System.out.println("INTERRUPTED. Stopping here.");
+            return false;
+        }
         Cache maxCache = getCacheWithBestVideo();
         if (maxCache == null) {
             System.out.println("We're done.");
@@ -128,7 +134,7 @@ public class StreamingProblem {
     }
 
     private double getOverallCacheUsage() {
-        return (double)totalUsedCacheCapacity * 100 / totalCacheCapacity;
+        return (double) totalUsedCacheCapacity * 100 / totalCacheCapacity;
     }
 
     @Nullable

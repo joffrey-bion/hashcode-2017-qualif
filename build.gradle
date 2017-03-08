@@ -9,14 +9,12 @@ sourceCompatibility = 1.8
 
 repositories {
     maven {
-        url  "http://dl.bintray.com/lwouis/maven"
+        url "http://dl.bintray.com/joffrey-bion/maven"
     }
-    jcenter()
 }
 
 dependencies {
-    compile 'com.lwouis.hashcode:hashcode_helper:1.0'
-    compile 'org.hildan.hashcode:hashcode-input-parser:2.0.0'
+    compile 'org.hildan.hashcode:hashcode-utils:3.0.0'
 }
 
 mainClassName = 'org.chocolateam.hashcode.Main'
@@ -24,9 +22,10 @@ mainClassName = 'org.chocolateam.hashcode.Main'
 task srcZip(type: Zip, dependsOn: tasks.build) {
     classifier = 'src'
     from sourceSets*.allSource
-    destinationDir file("$rootDir/outputs/")}
+    destinationDir file("$rootDir/outputs/")
+}
 
-task generateOutputs ( type: JavaExec, dependsOn: tasks.build ) {
+task generateOutputs(type: JavaExec, dependsOn: tasks.build) {
     args("inputs/*")
     description = "Hashcode output generation"
     main = project.mainClassName
