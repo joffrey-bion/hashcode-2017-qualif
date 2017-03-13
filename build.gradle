@@ -8,13 +8,12 @@ version = '1.0.0'
 sourceCompatibility = 1.8
 
 repositories {
-    maven {
-        url "http://dl.bintray.com/joffrey-bion/maven"
-    }
+    jcenter()
 }
 
 dependencies {
     compile 'org.hildan.hashcode:hashcode-utils:3.0.0'
+    testCompile 'junit:junit:4.+'
 }
 
 mainClassName = 'org.chocolateam.hashcode.Main'
