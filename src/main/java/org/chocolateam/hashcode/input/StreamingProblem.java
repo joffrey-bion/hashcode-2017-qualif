@@ -182,20 +182,9 @@ public class StreamingProblem {
     private void reduceVideoScores(Video video, double overestimationInRank, int[] cacheIds, int chosenCache) {
         for (int cacheId : cacheIds) {
             if (cacheId != chosenCache) {
-                reduceVideoScore(video, overestimationInRank, caches[cacheId]);
+                caches[cacheId].reduceVideoScore(video, overestimationInRank);
             }
         }
     }
 
-    private static void reduceVideoScore(Video video, double amount, Cache cache) {
-        ScoredVideo videoInThisCache = cache.scoredVideos.removeFirstMatch(v -> v.video.id == video.id);
-        if (videoInThisCache == null) {
-            return;
-        }
-        videoInThisCache.score -= amount;
-        if (videoInThisCache.score < 0) {
-            videoInThisCache.score = 0;
-        }
-        cache.scoredVideos.add(videoInThisCache);
-    }
 }

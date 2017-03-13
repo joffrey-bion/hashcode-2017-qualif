@@ -89,6 +89,18 @@ public class Cache {
         return storedVideos;
     }
 
+    public void reduceVideoScore(Video video, double amount) {
+        ScoredVideo videoInThisCache = scoredVideos.removeFirstMatch(v -> v.video.id == video.id);
+        if (videoInThisCache == null) {
+            return;
+        }
+        videoInThisCache.score -= amount;
+        if (videoInThisCache.score < 0) {
+            videoInThisCache.score = 0;
+        }
+        scoredVideos.add(videoInThisCache);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
